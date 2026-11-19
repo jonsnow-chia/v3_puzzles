@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUE_VERSION: 0.12.0
+  # Rue.toml reports every lint as a warning, so local builds and tests still work while code
+  # is in progress. CI denies all of them, so nothing gets merged with a warning.
+  RUE_DENY: >-
+    -D unused
+    -D style
+    -D suspicious
+    -D debug_statement
+    -D unknown_lint
+    -D unfulfilled_lint_expectation
+
+jobs:
+  rue:
+    name: Rue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rue
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: rue-cli@${{ env.RUE_VERSION }}
+
+      - name: Check formatting
+        run: rue fmt --check
+
+      - name: Build
+        run: rue build $RUE_DENY
+
+      - name: Test
+        run: rue test $RUE_DENY
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test

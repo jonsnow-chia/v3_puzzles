@@ -1,28 +1,16 @@
 import struts::*;
 
-
-export fn withdraw_from_vault(
-    args: VaultArgs,
-    solution: VaultSolution,
-) -> List<Condition> {
+export fn withdraw_from_vault(args: VaultArgs, solution: VaultSolution) -> List<Condition> {
     assert solution.amount < args.state.reserve;
 
-    let announcement_id =
-        sha256(
-            solution.pool_coin_id
-            + solution.commitment
-            + args.config.pool_launcher_id
-        );
+    let announcement_id = sha256(
+        solution.pool_coin_id + solution.commitment + args.config.pool_launcher_id,
+    );
 
     [
-        AssertCoinAnnouncement {
-            id: announcement_id,
-        },
+        AssertCoinAnnouncement { id: announcement_id },
 
-        CreateCoin {
-            puzzle_hash: solution.recipient_puzzle_hash,
-            amount: solution.amount,
-        },
+        CreateCoin { puzzle_hash: solution.recipient_puzzle_hash, amount: solution.amount },
 
         CreateCoin {
             puzzle_hash: solution.vault_puzzle_hash,
@@ -31,22 +19,13 @@ export fn withdraw_from_vault(
     ]
 }
 
-export fn deposit_to_vault(
-    args: VaultArgs,
-    solution: VaultSolution,
-) -> List<Condition> {
-
-    let announcement_id =
-        sha256(
-            solution.pool_coin_id
-            + solution.commitment
-            + args.config.pool_launcher_id
-        );
+export fn deposit_to_vault(args: VaultArgs, solution: VaultSolution) -> List<Condition> {
+    let announcement_id = sha256(
+        solution.pool_coin_id + solution.commitment + args.config.pool_launcher_id,
+    );
 
     [
-        AssertCoinAnnouncement {
-            id: announcement_id,
-        },
+        AssertCoinAnnouncement { id: announcement_id },
 
         CreateCoin {
             puzzle_hash: solution.vault_puzzle_hash,
@@ -55,12 +34,9 @@ export fn deposit_to_vault(
     ]
 }
 
-fn main(
-    deposit: Bool,
-    args: VaultArgs,
-    solution: VaultSolution,
-) -> List<Condition> {
-
+// Only an exact `1` selects a deposit, so compare to `true` rather than checking truthiness.
+#[expect(bool_comparison)]
+fn main(deposit: Bool, args: VaultArgs, solution: VaultSolution) -> List<Condition> {
     if deposit == true {
         deposit_to_vault(args, solution)
     } else {

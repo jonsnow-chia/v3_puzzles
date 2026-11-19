@@ -40,7 +40,6 @@ export struct TickState {
     fee_growth_outside1_scaled: Int,
 }
 
-
 export struct Position {
     pool_launcher_id: Bytes32,
     owner: Bytes32,

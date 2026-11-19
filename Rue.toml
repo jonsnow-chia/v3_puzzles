@@ -1,7 +1,15 @@
 [compiler]
-version = "0.11.0"
+version = "0.12.0"
 entrypoint = "puzzles"
 
 [formatter]
 max_width = 100
 indent_width = 4
+
+[lints]
+unused = "warn"
+style = "warn"
+suspicious = "warn"
+debug_statement = "warn"
+unknown_lint = "warn"
+unfulfilled_lint_expectation = "warn"

@@ -1,4 +1,3 @@
-
 export struct Tick {
     tick_index: Int,
     sqrt_price_scaled: Int,

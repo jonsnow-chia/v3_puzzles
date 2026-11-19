@@ -53,23 +53,20 @@ export fn create_position_conditions(
 
     // Commit to the exact position and deposits.
     let commitment_data = (
-    solution.pool_coin_id,
-    (
-        solution.owner_puzzle_hash,
+        solution.pool_coin_id,
         (
-            solution.tick_lower,
+            solution.owner_puzzle_hash,
             (
-                solution.tick_upper,
+                solution.tick_lower,
                 (
-                    position_state.liquidity,
-                    (solution.amount0, solution.amount1),
+                    solution.tick_upper,
+                    (position_state.liquidity, (solution.amount0, solution.amount1)),
                 ),
             ),
         ),
-    ),
-);
+    );
 
-let commitment = tree_hash(commitment_data);
+    let commitment = tree_hash(commitment_data);
 
     // Calculate the custom prelauncher puzzle hash.
     let prelauncher_hash = curry_tree_hash(
@@ -82,51 +79,28 @@ let commitment = tree_hash(commitment_data);
     );
 
     // Calculate the zero-mojo prelauncher coin ID.
-    let prelauncher_coin_id = coinid(
-        solution.prelauncher_parent_id,
-        prelauncher_hash,
-        0,
-    );
+    let prelauncher_coin_id = coinid(solution.prelauncher_parent_id, prelauncher_hash, 0);
 
     // Calculate the standard singleton launcher ID.
-    let position_launcher_id = coinid(
-        prelauncher_coin_id,
-        args.launcher_puzzle_hash,
-        1,
-    );
+    let position_launcher_id = coinid(prelauncher_coin_id, args.launcher_puzzle_hash, 1);
 
     // Position inner puzzle.
-    let position_inner_hash = curry_tree_hash(
-        args.position_mod_hash,
-        [
-            tree_hash(position_state),
-        ],
-    );
+    let position_inner_hash = curry_tree_hash(args.position_mod_hash, [tree_hash(position_state)]);
 
     // Standard singleton structure.
     let singleton_struct_hash = tree_hash((
         args.singleton_mod_hash,
-        (
-            position_launcher_id,
-            args.launcher_mod_hash,
-        ),
+        (position_launcher_id, args.launcher_mod_hash),
     ));
 
     // Full position singleton puzzle hash.
     let position_full_hash = curry_tree_hash(
         args.singleton_mod_hash,
-        [
-            singleton_struct_hash,
-            position_inner_hash,
-        ],
+        [singleton_struct_hash, position_inner_hash],
     );
 
     // ID of the newly created position singleton.
-    let position_coin_id = coinid(
-        position_launcher_id,
-        position_full_hash,
-        1,
-    );
+    let position_coin_id = coinid(position_launcher_id, position_full_hash, 1);
 
     // Expected incoming CAT deposit coin IDs.
     let deposit0_coin_id = coinid(
@@ -143,33 +117,21 @@ let commitment = tree_hash(commitment_data);
 
     // Ensure this is the actual pool coin being spent.
     [
-        AssertMyCoinId {
-            coin_id: solution.pool_coin_id,
-        },
+        AssertMyCoinId { coin_id: solution.pool_coin_id },
 
         // Authorize the exact position creation.
-        CreateCoinAnnouncement {
-            message: commitment,
-        },
+        CreateCoinAnnouncement { message: commitment },
 
         // Require the prelauncher to be spent.
-        AssertConcurrentSpend {
-            coin_id: prelauncher_coin_id,
-        },
+        AssertConcurrentSpend { coin_id: prelauncher_coin_id },
 
         // Require the position singleton to be created and spent.
-        AssertConcurrentSpend {
-            coin_id: position_coin_id,
-        },
+        AssertConcurrentSpend { coin_id: position_coin_id },
 
         // Require both deposit CAT coins to be spent.
-        AssertConcurrentSpend {
-            coin_id: deposit0_coin_id,
-        },
+        AssertConcurrentSpend { coin_id: deposit0_coin_id },
 
-        AssertConcurrentSpend {
-            coin_id: deposit1_coin_id,
-        },
+        AssertConcurrentSpend { coin_id: deposit1_coin_id },
     ]
 }
 
@@ -179,29 +141,14 @@ export struct DepositSolution {
     amount: Int,
 }
 
-fn main(
-    vault_inner_puzzle_hash: Bytes32,
-    solution: DepositSolution,
-) -> List<Condition> {
-
-
-    let announcement_id = sha256(solution.pool_coin_id +
-    solution.commitment );
+fn main(vault_inner_puzzle_hash: Bytes32, solution: DepositSolution) -> List<Condition> {
+    let announcement_id = sha256(solution.pool_coin_id + solution.commitment);
 
     [
-        AssertMyAmount {
-            amount: solution.amount,
-        },
+        AssertMyAmount { amount: solution.amount },
 
-        AssertCoinAnnouncement {
-            id: announcement_id,
-        },
+        AssertCoinAnnouncement { id: announcement_id },
 
-        CreateCoin {
-            puzzle_hash: vault_inner_puzzle_hash,
-            amount: solution.amount,
-            memos: nil,
-        },
+        CreateCoin { puzzle_hash: vault_inner_puzzle_hash, amount: solution.amount, memos: nil },
     ]
 }
-

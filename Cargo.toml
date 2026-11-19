@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.104"
-chia-wallet-sdk = "0.38.0"
+chia-wallet-sdk = "0.39.0"
 sha2 = "0.11.1"
