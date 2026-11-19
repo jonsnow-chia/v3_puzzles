@@ -82,7 +82,7 @@ export fn x_from_y(
 }
 
 // Only an exact `1` selects `by_y`, so compare to `true` rather than checking truthiness.
-#[expect(bool_comparison)]
+
 export fn calculate_deposit(
     amount0: Int,
     amount1: Int,
