@@ -35,7 +35,7 @@ export fn deposit_to_vault(args: VaultArgs, solution: VaultSolution) -> List<Con
 }
 
 // Only an exact `1` selects a deposit, so compare to `true` rather than checking truthiness.
-
+#[expect(bool_comparison)]
 fn main(deposit: Bool, args: VaultArgs, solution: VaultSolution) -> List<Condition> {
     if deposit == true {
         deposit_to_vault(args, solution)
