@@ -1,0 +1,75 @@
+import structs::*;
+
+fn swap_token0_in(dx: Int, sqrt_p: Int, liquidity: Int, scaler: Int, fee: Int) -> SwapOut {
+    let dx_eff = dx * (10000 - fee) / 10000;
+
+    let fee_amount = dx - dx_eff;
+
+    let denominator = liquidity * scaler + dx_eff * sqrt_p;
+
+    let new_sqrt_p = liquidity * scaler * sqrt_p / denominator;
+
+    let dy = dx_eff * liquidity * sqrt_p * sqrt_p / (scaler * denominator);
+
+    SwapOut { amount_out: dy, new_p: new_sqrt_p, fee: fee_amount }
+}
+
+fn swap_token1_in(dy: Int, sqrt_p: Int, liquidity: Int, scaler: Int, fee: Int) -> SwapOut {
+    let dy_eff = dy * (10000 - fee) / 10000;
+
+    let fee_amount = dy - dy_eff;
+
+    let new_sqrt_p = sqrt_p + dy_eff * scaler / liquidity;
+
+    let dx = dy_eff * scaler * scaler / (new_sqrt_p * sqrt_p);
+
+    SwapOut { amount_out: dx, new_p: new_sqrt_p, fee: fee_amount }
+}
+
+export fn swap(pool: PoolState, amount: Int, swap_token: String) -> (PoolState, SwapOut) {
+    assert amount > 0;
+
+    if swap_token == "amount0" {
+        let swap = { swap_token0_in(
+            amount,
+            pool.sqrt_price,
+            pool.liquidity,
+            pool.scaler,
+            pool.fee,
+        ) };
+
+        assert swap.new_p >= pool.sqrt_price_lower;
+
+        let new_pool = PoolState {
+            sqrt_price: swap.new_p,
+            sqrt_price_lower: pool.sqrt_price_lower,
+            sqrt_price_upper: pool.sqrt_price_upper,
+            reserve0: pool.reserve0 + amount,
+            reserve1: pool.reserve1 - swap.amount_out,
+            scaler: pool.scaler,
+            liquidity: pool.liquidity,
+            fee: pool.fee,
+            acc_fees: pool.acc_fees + swap.fee,
+        };
+
+        (new_pool, swap)
+    } else {
+        let swap = swap_token1_in(amount, pool.sqrt_price, pool.liquidity, pool.scaler, pool.fee);
+
+        assert swap.new_p <= pool.sqrt_price_upper;
+
+        let new_pool = PoolState {
+            sqrt_price: swap.new_p,
+            sqrt_price_lower: pool.sqrt_price_lower,
+            sqrt_price_upper: pool.sqrt_price_upper,
+            reserve0: pool.reserve0 - swap.amount_out,
+            reserve1: pool.reserve1 + amount,
+            scaler: pool.scaler,
+            liquidity: pool.liquidity,
+            fee: pool.fee,
+            acc_fees: pool.acc_fees + swap.fee,
+        };
+
+        (new_pool, swap)
+    }
+}
