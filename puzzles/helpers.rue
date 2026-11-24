@@ -1,0 +1,19 @@
+// Helper functions
+
+// finds the min
+export fn min(a: Int, b: Int) -> Int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// round down or up
+export fn round(a: Int, b: Int, round_up: Bool) -> Int {
+    if round_up {
+        (a + b - 1) / b
+    } else {
+        a / b
+    }
+}

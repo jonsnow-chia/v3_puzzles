@@ -1,0 +1,78 @@
+export struct PoolConfig {
+    //launcher_id: Bytes32,
+    //token0_id: Bytes32,
+    //token1_id: Bytes32,
+
+    //prelauncher_mod_hash: Bytes32,
+    //singleton_mod_hash: Bytes32,
+    //launcher_mod_hash: Bytes32,
+    //position_mod_hash: Bytes32,
+    launcher_puzzle_hash: Bytes32,
+
+    //deposit_cat_puzzle_hash0: Bytes32,
+    //deposit_cat_puzzle_hash1: Bytes32,
+
+    //scalar: Int,
+    //price_spacing_scaled: Int,
+    //fee_scaled: Int,
+}
+
+export struct PoolState {
+    sqrt_price: Int,
+    sqrt_price_lower: Int,
+    sqrt_price_upper: Int,
+    reserve0: Int,
+    reserve1: Int,
+    scaler: Int,
+    liquidity: Int,
+    fee: Int,
+    acc_fees: Int,
+}
+
+export struct Tick {
+    tick_index: Int,
+    sqrt_price_scaled: Int,
+    liquidity_gross: Int,
+    liquidity_net: Int,
+    fee_growth_outside0_scaled: Int,
+    fee_growth_outside1_scaled: Int,
+}
+
+export struct TickCollection {
+    ticks: List<Tick>,
+}
+
+export struct TickSearchResult {
+    found: Bool,
+    tick: Tick,
+}
+
+export struct Position {
+    pool_launcher_id: Bytes32,
+    owner: Bytes32,
+
+    lower_tick: Int,
+    upper_tick: Int,
+
+    liquidity: Int,
+
+    fee_growth_inside0_last: Int,
+    fee_growth_inside1_last: Int,
+}
+
+export struct SwapOut {
+    amount_out: Int,
+    new_p: Int,
+    fee: Int,
+}
+
+export struct Deposit {
+    am0: Int,
+    am1: Int,
+    liq: Int,
+}
+
+export struct Wallet {
+    amount0: Int,
+    amount1: Int,
+}

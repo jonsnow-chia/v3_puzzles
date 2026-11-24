@@ -1,0 +1,51 @@
+import structs::*;
+
+export const TICKS: List<Tick> = [
+    Tick {
+        tick_index: 10,
+        sqrt_price_scaled: 100,
+        liquidity_gross: 500,
+        liquidity_net: 200,
+        fee_growth_outside0_scaled: 0,
+        fee_growth_outside1_scaled: 0,
+    },
+    Tick {
+        tick_index: 20,
+        sqrt_price_scaled: 200,
+        liquidity_gross: 600,
+        liquidity_net: -100,
+        fee_growth_outside0_scaled: 0,
+        fee_growth_outside1_scaled: 0,
+    },
+    Tick {
+        tick_index: 30,
+        sqrt_price_scaled: 300,
+        liquidity_gross: 700,
+        liquidity_net: 100,
+        fee_growth_outside0_scaled: 0,
+        fee_growth_outside1_scaled: 0,
+    },
+    Tick {
+        tick_index: 40,
+        sqrt_price_scaled: 400,
+        liquidity_gross: 0,
+        liquidity_net: -700,
+        fee_growth_outside0_scaled: 0,
+        fee_growth_outside1_scaled: 0,
+    },
+];
+
+export const WALLET: Wallet = Wallet { amount0: 300, amount1: 300 };
+
+export const POSITION: Position = Position {
+    pool_launcher_id: 0x0000000000000000000000000000000000000000000000000000000000000000,
+    owner: 0x0000000000000000000000000000000000000000000000000000000000000034,
+
+    lower_tick: 10,
+    upper_tick: 30,
+
+    liquidity: 10000,
+
+    fee_growth_inside0_last: 100,
+    fee_growth_inside1_last: 100,
+};
