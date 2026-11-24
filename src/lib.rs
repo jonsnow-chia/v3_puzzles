@@ -1,3 +1,3 @@
-fn main()->{
-    printl!("Hello silly")
+pub fn main() {
+    println!("Hello silly");
 }
