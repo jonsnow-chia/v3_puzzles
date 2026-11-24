@@ -1,7 +1,0 @@
-export struct Position {
-    owner: Bytes32,
-    lower_tick: Int,
-    upper_tick: Int,
-    liquidity: Int,
-    last_fee: Int,
-}
