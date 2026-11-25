@@ -1,12 +1,12 @@
 import helpers::*;
 import structs::*;
 
-fn liquidity0(amount0: Int, sqrt_price: Int, sqrt_upper: Int, scaling_factor: Int) -> Int {
-    round(amount0 * sqrt_price * sqrt_upper, scaling_factor * (sqrt_upper - sqrt_price), false)
+fn liquidity0(amount0: Int, sqrt_price: Int, sqrt_upper: Int) -> Int {
+    round(amount0 * sqrt_price * sqrt_upper,  sqrt_upper - sqrt_price, false)
 }
 
 fn liquidity1(amount1: Int, sqrt_price: Int, sqrt_lower: Int, scaling_factor: Int) -> Int {
-    round(amount1 * scaling_factor, sqrt_price - sqrt_lower, false)
+    round(amount1 * scaling_factor * scaling_factor, sqrt_price - sqrt_lower, false)
 }
 
 fn calculateliquidity(
@@ -18,11 +18,11 @@ fn calculateliquidity(
     scaling_factor: Int,
 ) -> Int {
     if sqrt_price <= sqrt_lower {
-        liquidity0(amount0, sqrt_lower, sqrt_upper, scaling_factor)
+        liquidity0(amount0, sqrt_lower, sqrt_upper)
     } else if sqrt_price >= sqrt_upper {
         liquidity1(amount1, sqrt_upper, sqrt_lower, scaling_factor)
     } else {
-        let l0 = liquidity0(amount0, sqrt_price, sqrt_upper, scaling_factor);
+        let l0 = liquidity0(amount0, sqrt_price, sqrt_upper);
 
         let l1 = liquidity1(amount1, sqrt_price, sqrt_lower, scaling_factor);
 
@@ -34,11 +34,10 @@ fn a0_from_liquidity(
     liquidity: Int,
     sqrt_price: Int,
     upper_sqrt_price: Int,
-    scaling_factor: Int,
     round_up: Bool,
 ) -> Int {
     round(
-        liquidity * scaling_factor * (upper_sqrt_price - sqrt_price),
+        liquidity * (upper_sqrt_price - sqrt_price),
         sqrt_price * upper_sqrt_price,
         round_up,
     )
@@ -51,7 +50,7 @@ fn a1_from_liquidity(
     scaling_factor: Int,
     round_up: Bool,
 ) -> Int {
-    round(liquidity * (sqrt_price - lower_sqrt_price), scaling_factor, round_up)
+    round(liquidity * (sqrt_price - lower_sqrt_price), scaling_factor * scaling_factor, round_up)
 }
 
 export fn calculate_deposit_withdraw(
@@ -77,7 +76,7 @@ export fn calculate_deposit_withdraw(
         sqrt_upper,
         scaling_factor,
     );
-    let amo0 = a0_from_liquidity(liquidity, sqrt_price, sqrt_upper, scaling_factor, deposit);
+    let amo0 = a0_from_liquidity(liquidity, sqrt_price, sqrt_upper, deposit);
     let amo1 = a1_from_liquidity(liquidity, sqrt_price, sqrt_lower, scaling_factor, deposit);
 
     Deposit { am0: amo0, am1: amo1, liq: liquidity }
