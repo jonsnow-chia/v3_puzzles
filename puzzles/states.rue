@@ -67,6 +67,6 @@ export const SWAP: Action = Action { am0: 300, am1: 0, action: "Swap", position:
 
 export const SWAP1: Action = Action { am0: 0, am1: 300, action: "Swap", position: nil };
 
-export const ADD: Action = Action { am0: 300, am1: 300, action: "deposit", position:  POSITION};
+export const ADD: Action = Action { am0: 300, am1: 300, action: "deposit", position: POSITION };
 
-export const REMOVE: Action = Action { am0: 300, am1: 300, action: "withdraw", position:  POSITION};
+export const REMOVE: Action = Action { am0: 300, am1: 300, action: "withdraw", position: POSITION };
