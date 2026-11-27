@@ -11,18 +11,21 @@
 //}
 
 import liquidity::*;
+import states::*;
 import structs::*;
+import swap::*;
 
-fn main() -> Deposit {
-    calculate_deposit_withdraw(
-        250, // Amount0
-        6000, // Amount1
-        10900000000000, // squareroot price scaled
-        9000000000000, // squareroot lp scaled
-        11000000000000, // squareroot up scaled
-        10000000000000, // scaling factor
-        false, // deposit true || false
-    )
+fn action(pool: PoolState, action: Action) -> (PoolState, Wallet) {
+    assert action.action == "Swap" || action.action == "deposit" || action.action == "withdraw";
+    if action.action == "Swap" {
+        swap(pool, action)
+    } else {
+        calculate_deposit_withdraw(pool, action)
+    }
+}
+
+fn main() -> (PoolState, Wallet) {
+    action(POOL, SWAP)
 }
 
 // the function returns chialisp arguments with lower numbers when complied and run with brun. 
