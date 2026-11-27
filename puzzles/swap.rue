@@ -1,15 +1,16 @@
 import structs::*;
 
+// Still need to check if scaled liquidity is implimented properly here
 fn swap_token0_in(dx: Int, sqrt_p: Int, liquidity: Int, scaler: Int, fee: Int) -> SwapOut {
     let dx_eff = dx * (10000 - fee) / 10000;
 
     let fee_amount = dx - dx_eff;
 
-    let denominator = liquidity * scaler + dx_eff * sqrt_p;
+    let denominator = liquidity + dx_eff * sqrt_p;
 
-    let new_sqrt_p = liquidity * scaler * sqrt_p / denominator;
+    let new_sqrt_p = liquidity * sqrt_p / denominator;
 
-    let dy = dx_eff * liquidity * sqrt_p * sqrt_p / (scaler * denominator);
+    let dy = dx_eff * liquidity * sqrt_p * sqrt_p / (scaler * scaler * denominator);
 
     SwapOut { amount_out: dy, new_p: new_sqrt_p, fee: fee_amount }
 }
@@ -19,19 +20,22 @@ fn swap_token1_in(dy: Int, sqrt_p: Int, liquidity: Int, scaler: Int, fee: Int) -
 
     let fee_amount = dy - dy_eff;
 
-    let new_sqrt_p = sqrt_p + dy_eff * scaler / liquidity;
+    let new_sqrt_p = sqrt_p + dy_eff * scaler * scaler / liquidity;
 
     let dx = dy_eff * scaler * scaler / (new_sqrt_p * sqrt_p);
 
     SwapOut { amount_out: dx, new_p: new_sqrt_p, fee: fee_amount }
 }
 
-export fn swap(pool: PoolState, amount: Int, swap_token: String) -> (PoolState, SwapOut) {
-    assert amount > 0;
+export fn swap(pool: PoolState, action: Action) -> (PoolState, Wallet) {
+    assert action.am0 > 0 || action.am1 > 0;
+    assert action.action == "Swap";
 
-    if swap_token == "amount0" {
+    if action.am0 > 0 {
+        assert action.am1 == 0;
+
         let swap = { swap_token0_in(
-            amount,
+            action.am0,
             pool.sqrt_price,
             pool.liquidity,
             pool.scaler,
@@ -39,37 +43,51 @@ export fn swap(pool: PoolState, amount: Int, swap_token: String) -> (PoolState, 
         ) };
 
         assert swap.new_p >= pool.sqrt_price_lower;
+        let amount0 = -action.am0;
+        let amount1 = swap.amount_out;
 
         let new_pool = PoolState {
             sqrt_price: swap.new_p,
             sqrt_price_lower: pool.sqrt_price_lower,
             sqrt_price_upper: pool.sqrt_price_upper,
-            reserve0: pool.reserve0 + amount,
+            reserve0: pool.reserve0 + action.am0,
             reserve1: pool.reserve1 - swap.amount_out,
             scaler: pool.scaler,
             liquidity: pool.liquidity,
             fee: pool.fee,
-            acc_fees: pool.acc_fees + swap.fee,
+            acc_fees_a0: pool.acc_fees_a0 + swap.fee,
+            acc_fees_a1: pool.acc_fees_a1,
         };
 
-        (new_pool, swap)
+        (new_pool, Wallet { amount0, amount1 })
     } else {
-        let swap = swap_token1_in(amount, pool.sqrt_price, pool.liquidity, pool.scaler, pool.fee);
+        assert action.am0 == 0;
+
+        let swap = swap_token1_in(
+            action.am1,
+            pool.sqrt_price,
+            pool.liquidity,
+            pool.scaler,
+            pool.fee,
+        );
 
         assert swap.new_p <= pool.sqrt_price_upper;
+        let amount0 = swap.amount_out;
+        let amount1 = -action.am1;
 
         let new_pool = PoolState {
             sqrt_price: swap.new_p,
             sqrt_price_lower: pool.sqrt_price_lower,
             sqrt_price_upper: pool.sqrt_price_upper,
             reserve0: pool.reserve0 - swap.amount_out,
-            reserve1: pool.reserve1 + amount,
+            reserve1: pool.reserve1 + action.am1,
             scaler: pool.scaler,
             liquidity: pool.liquidity,
             fee: pool.fee,
-            acc_fees: pool.acc_fees + swap.fee,
+            acc_fees_a0: pool.acc_fees_a0,
+            acc_fees_a1: pool.acc_fees_a1 + swap.fee,
         };
 
-        (new_pool, swap)
+        (new_pool, Wallet { amount0, amount1 })
     }
 }
