@@ -37,15 +37,36 @@ export const TICKS: List<Tick> = [
 
 export const WALLET: Wallet = Wallet { amount0: 300, amount1: 300 };
 
+export const POOL: PoolState = PoolState {
+    sqrt_price: 10_000_000_000_000_000_000_000_000,
+    sqrt_price_lower: 9_000_000_000_000_000_000_000_000,
+    sqrt_price_upper: 11_000_000_000_000_000_000_000_000,
+    reserve0: 300,
+    reserve1: 300,
+    scaler: 10_000_000_000_000_000_000_000_000,
+    liquidity: 30_000_000_000_000_000_000_000_000_000,
+    fee: 100,
+    acc_fees_a0: 30,
+    acc_fees_a1: 40,
+};
+
 export const POSITION: Position = Position {
     pool_launcher_id: 0x0000000000000000000000000000000000000000000000000000000000000000,
     owner: 0x0000000000000000000000000000000000000000000000000000000000000034,
 
-    lower_tick: 10,
-    upper_tick: 30,
+    lower_tick: 9_000_000_000_000_000_000_000_000,
+    upper_tick: 11_000_000_000_000_000_000_000_000,
 
-    liquidity: 10000,
+    liquidity: 30_000_000_000_000_000_000_000_000_000,
 
     fee_growth_inside0_last: 100,
     fee_growth_inside1_last: 100,
 };
+
+export const SWAP: Action = Action { am0: 300, am1: 0, action: "Swap", position: nil };
+
+export const SWAP1: Action = Action { am0: 0, am1: 300, action: "Swap", position: nil };
+
+export const ADD: Action = Action { am0: 300, am1: 300, action: "deposit", position:  POSITION};
+
+export const REMOVE: Action = Action { am0: 300, am1: 300, action: "withdraw", position:  POSITION};
