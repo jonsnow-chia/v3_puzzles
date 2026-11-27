@@ -2,7 +2,7 @@ import helpers::*;
 import structs::*;
 
 fn liquidity0(amount0: Int, sqrt_price: Int, sqrt_upper: Int) -> Int {
-    round(amount0 * sqrt_price * sqrt_upper,  sqrt_upper - sqrt_price, false)
+    round(amount0 * sqrt_price * sqrt_upper, sqrt_upper - sqrt_price, false)
 }
 
 fn liquidity1(amount1: Int, sqrt_price: Int, sqrt_lower: Int, scaling_factor: Int) -> Int {
@@ -36,11 +36,7 @@ fn a0_from_liquidity(
     upper_sqrt_price: Int,
     round_up: Bool,
 ) -> Int {
-    round(
-        liquidity * (upper_sqrt_price - sqrt_price),
-        sqrt_price * upper_sqrt_price,
-        round_up,
-    )
+    round(liquidity * (upper_sqrt_price - sqrt_price), sqrt_price * upper_sqrt_price, round_up)
 }
 
 fn a1_from_liquidity(
@@ -53,31 +49,59 @@ fn a1_from_liquidity(
     round(liquidity * (sqrt_price - lower_sqrt_price), scaling_factor * scaling_factor, round_up)
 }
 
-export fn calculate_deposit_withdraw(
-    amount0: Int,
-    amount1: Int,
-    sqrt_price: Int,
-    sqrt_lower: Int,
-    sqrt_upper: Int,
-    scaling_factor: Int,
-    deposit: Bool,
-) -> Deposit {
-    assert sqrt_lower < sqrt_upper;
-    assert sqrt_price >= sqrt_lower;
-    assert sqrt_price <= sqrt_upper;
-    assert amount0 >= 0;
-    assert amount1 >= 0;
+export fn calculate_deposit_withdraw(pool: PoolState, action: Action) -> (PoolState, Wallet) {
+    let sqrt_price = pool.sqrt_price;
+    assert action.action == "deposit" || action.action == "withdraw";
+    assert action.position is Position;
 
-    let liquidity = calculateliquidity(
-        amount0,
-        amount1,
-        sqrt_price,
-        sqrt_lower,
-        sqrt_upper,
-        scaling_factor,
-    );
+    let deposit = action.action == "deposit";
+    let scaler = pool.scaler;
+    let sqrt_lower = action.position.lower_tick;
+    let sqrt_upper = action.position.upper_tick;
+
+    assert action.am0 >= 0;
+    assert action.am1 >= 0;
+
+    assert sqrt_upper > sqrt_lower;
+
+    let liquidity = if deposit {
+        calculateliquidity(action.am0, action.am1, sqrt_price, sqrt_lower, sqrt_upper, scaler)
+    } else {
+        action.position.liquidity
+    };
+
     let amo0 = a0_from_liquidity(liquidity, sqrt_price, sqrt_upper, deposit);
-    let amo1 = a1_from_liquidity(liquidity, sqrt_price, sqrt_lower, scaling_factor, deposit);
+    let amo1 = a1_from_liquidity(liquidity, sqrt_price, sqrt_lower, scaler, deposit);
 
-    Deposit { am0: amo0, am1: amo1, liq: liquidity }
+    let (reserve0, reserve1) = if deposit {
+        (pool.reserve0 + amo0, pool.reserve1 + amo1)
+    } else {
+        (pool.reserve0 - amo0, pool.reserve1 - amo1)
+    };
+
+    let (amount0, amount1) = if deposit {
+        (-amo0, -amo1)
+    } else {
+        (amo0, amo1)
+    };
+
+    (
+        PoolState {
+            sqrt_price: pool.sqrt_price,
+            sqrt_price_lower: pool.sqrt_price_lower,
+            sqrt_price_upper: pool.sqrt_price_upper,
+            reserve0,
+            reserve1,
+            scaler: pool.scaler,
+            liquidity: if deposit {
+                pool.liquidity + liquidity
+            } else {
+                pool.liquidity - liquidity
+            },
+            fee: pool.fee,
+            acc_fees_a0: pool.acc_fees_a0,
+            acc_fees_a1: pool.acc_fees_a1,
+        },
+        Wallet { amount0, amount1 },
+    )
 }
