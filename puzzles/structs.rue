@@ -26,7 +26,8 @@ export struct PoolState {
     scaler: Int,
     liquidity: Int,
     fee: Int,
-    acc_fees: Int,
+    acc_fees_a0: Int,
+    acc_fees_a1: Int,
 }
 
 export struct Tick {
@@ -66,10 +67,11 @@ export struct SwapOut {
     fee: Int,
 }
 
-export struct Deposit {
+export struct Action {
     am0: Int,
     am1: Int,
-    liq: Int,
+    action: String,
+    position: Position | nil,
 }
 
 export struct Wallet {
